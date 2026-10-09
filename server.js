@@ -14,6 +14,47 @@ dotenv.config();
 
 const app = express();
 
+const clientUrlConfig = process.env.CLIENT_URL;
+
+if (!clientUrlConfig && process.env.NODE_ENV === "production") {
+  throw new Error("CLIENT_URL must be set in production.");
+}
+
+const clientUrls = clientUrlConfig
+  ? clientUrlConfig.split(",").map((url) => url.trim())
+  : ["http://localhost:5173"];
+
+if (clientUrls.some((url) => !url)) {
+  throw new Error("CLIENT_URL must contain comma-separated frontend origins.");
+}
+
+const allowedOrigins = new Set(
+  clientUrls.map((clientUrl) => {
+    let parsedUrl;
+
+    try {
+      parsedUrl = new URL(clientUrl);
+    } catch {
+      throw new Error(`Invalid frontend origin in CLIENT_URL: ${clientUrl}`);
+    }
+
+    if (
+      !["http:", "https:"].includes(parsedUrl.protocol) ||
+      parsedUrl.username ||
+      parsedUrl.password ||
+      parsedUrl.pathname !== "/" ||
+      parsedUrl.search ||
+      parsedUrl.hash
+    ) {
+      throw new Error(
+        `CLIENT_URL must contain only frontend origins (scheme and host): ${clientUrl}`
+      );
+    }
+
+    return parsedUrl.origin;
+  })
+);
+
 /* ==============================
    DATABASE
 ================================ */
@@ -26,7 +67,9 @@ connectDB();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, callback) => {
+      callback(null, !origin || allowedOrigins.has(origin));
+    },
     credentials: true,
   })
 );
