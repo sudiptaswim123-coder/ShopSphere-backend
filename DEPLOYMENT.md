@@ -21,11 +21,12 @@ frontend's browser origin exactly. Production startup fails if `CLIENT_URL` is
 missing or invalid when `NODE_ENV=production`. Set `NODE_ENV=production` in
 Render. In development, the origin defaults to `http://localhost:5173`.
 
-In Vercel, set the frontend's backend API URL environment variable to the
-Render service URL (for example, `https://your-api.onrender.com`), then redeploy
-the frontend. Set the backend's other required secrets in Render as well:
-`MONGO_URI` and `JWT_SECRET`. Render provides the `PORT` environment variable
-for the API process.
+In Vercel, set `VITE_API_URL` to the Render service URL (for example,
+`https://your-api.onrender.com`), then redeploy the frontend. The frontend adds
+`/api` automatically, so do not add a route such as `/products`; a URL already
+ending in `/api` is also accepted. Set the backend's other required secrets in
+Render as well: `MONGO_URI` and `JWT_SECRET`. Render provides the `PORT`
+environment variable for the API process.
 
 ## Local development
 
